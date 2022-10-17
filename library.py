@@ -40,7 +40,7 @@ class MappingTransformer(BaseEstimator, TransformerMixin):
     result = self.transform(X)
     return result
   
-  class RenamingTransformer(BaseEstimator, TransformerMixin):
+class RenamingTransformer(BaseEstimator, TransformerMixin):
 
   def __init__(self, mapping_dict:dict):
     assert isinstance(mapping_dict, dict), f'{self.__class__.__name__} constructor expected dictionary but got {type(mapping_dict)} instead.'

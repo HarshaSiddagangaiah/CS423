@@ -40,11 +40,11 @@ class MappingTransformer(BaseEstimator, TransformerMixin):
         result = self.transform(X)
         return result
     
-class RenamingTransformer(BaseEstimator, TransformerMixin):
-
-    def __init__(self, mapping_dict:dict):
-        assert isinstance(mapping_dict, dict), f'{self.__class__.__name__} constructor expected dictionary but got {type(mapping_dict)} instead.'
-        self.mapping_dict = mapping_dict
+class DropColumnsTransformer(BaseEstimator, TransformerMixin):
+    def __init__(self, column_list, action='drop'):
+        assert action in ['keep', 'drop'], f'{self.__class__.__name__} action {action} not in ["keep", "drop"]'
+        self.column_list=column_list
+        self.action=action
 
     def fit(self, X, y = None):
         print(f"\nWarning: {self.__class__.__name__}.fit does nothing.\n")
@@ -52,14 +52,16 @@ class RenamingTransformer(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         assert isinstance(X, pd.core.frame.DataFrame), f'{self.__class__.__name__}.transform expected Dataframe but got {type(X)} instead.'
-        column_set=set(X)
-        rename_column=set(self.mapping_dict.keys())
-        unknown_keys=rename_column.difference(column_set)
-        if unknown_keys:
-            assert rename_column in unknown_keys, f'{self.__class__.__name__}.transform unknown column {unknown_keys}'  #column legit?
-
-        X_ = X.copy()
-        X_.rename(columns = self.mapping_dict, inplace = True)
+        column_set=set(self.column_list)-set(X.columns.to_list())
+        if self.action == 'keep':
+            assert column_set == set(), f'{self.__class__.__name__}.transform does not contain these columns to keep: {column_set} .'
+            X_=X.copy()
+            X_ = X[self.column_list]
+        if self.action == 'drop':
+            X_=X.copy()
+            if column_set != set():
+                print(f"\nWarning: {self.__class__.__name__} does not contain these columns to drop: {column_set}.\n")
+            X_= X_.drop(columns=self.column_list, errors ='ignore')
         return X_
 
     def fit_transform(self, X, y = None):

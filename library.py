@@ -86,4 +86,65 @@ class OHETransformer(BaseEstimator, TransformerMixin):
     def fit_transform(self, X, y = None):
         result = self.transform(X)
         return result
- 
+      
+ class Sigma3Transformer(BaseEstimator, TransformerMixin):
+
+    def __init__(self, column_name):
+        self.column_name = column_name  
+
+    def fit(self, X, y = None):
+        print(f"\nWarning: {self.__class__.__name__}.fit does nothing.\n")
+        return X
+
+    def transform(self, X):
+        assert isinstance(X, pd.core.frame.DataFrame), f'expected Dataframe but got {type(X)} instead.'
+        assert self.column_name in X.columns.to_list(), f'unknown column {self.column_name}'
+        assert all([isinstance(v, (int, float)) for v in X[self.column_name].to_list()])
+
+        mean=X[self.column_name].mean()
+        sigma=X[self.column_name].std()
+        s3min=(mean-3*sigma)
+        s3max=(mean+3*sigma)
+        X_=X.copy()
+        X_[self.column_name] = X_[self.column_name].clip(lower=s3min, upper=s3max)
+        return X_
+
+    def fit_transform(self, X, y = None):
+        result = self.transform(X)
+        return result
+
+class TukeyTransformer(BaseEstimator, TransformerMixin):
+
+    def __init__(self, target_column,fence):
+        self.target_column = target_column  
+        self.fence=fence
+
+    def fit(self, X, y = None):
+        print(f"\nWarning: {self.__class__.__name__}.fit does nothing.\n")
+        return X
+
+    def transform(self, X):
+        fence_value=['inner','outer']
+        assert isinstance(X, pd.core.frame.DataFrame), f'expected Dataframe but got {type(X)} instead.'
+        assert self.target_column in X.columns.to_list(), f'unknown column {self.target_column}'
+        assert self.fence in fence_value, f'invalid fence "{self.fence}" passed. Fence should be {fence_value[0]} or {fence_value[1]}'
+
+        q1 = X[self.target_column].quantile(0.25)
+        q3 = X[self.target_column].quantile(0.75)
+        iqr = q3-q1
+        outer_low = q1-3*iqr
+        outer_high = q3+3*iqr
+
+        inner_low = q1-1.5*iqr
+        inner_high = q3+1.5*iqr
+        X_=X.copy()
+        if self.fence == 'inner':
+            X_[self.target_column] = X_[self.target_column].clip(lower=inner_low, upper=inner_high)
+            return X_
+        if self.fence == 'outer':
+            X_[self.target_column] = X_[self.target_column].clip(lower=outer_low, upper=outer_high)
+            return X_
+
+    def fit_transform(self, X, y = None):
+        result = self.transform(X)
+        return result

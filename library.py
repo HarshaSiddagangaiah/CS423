@@ -86,9 +86,8 @@ class OHETransformer(BaseEstimator, TransformerMixin):
     def fit_transform(self, X, y = None):
         result = self.transform(X)
         return result
-        
-class Sigma3Transformer(BaseEstimator, TransformerMixin):
 
+class Sigma3Transformer(BaseEstimator, TransformerMixin):
     def __init__(self, column_name):
         self.column_name = column_name  
 
@@ -114,7 +113,6 @@ class Sigma3Transformer(BaseEstimator, TransformerMixin):
         return result
 
 class TukeyTransformer(BaseEstimator, TransformerMixin):
-
     def __init__(self, target_column,fence):
         self.target_column = target_column  
         self.fence=fence

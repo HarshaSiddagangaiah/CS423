@@ -157,12 +157,11 @@ class MinMaxTransformer(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X_=X.copy()
-        min=X_.min()
-        max=X_.max()
-        denom=max-min
-        X_ -=min
-        X_ /=denom
-        return X_
+        from sklearn.preprocessing import MinMaxScaler
+        scaler=MinMaxScaler()
+        column_name=X_.columns.to_list()
+        scaler_df=pd.DataFrame(scaler.fit_transform(X),columns = column_name)
+        return scaler_df
 
     def fit_transform(self, X, y = None):
         result = self.transform(X)

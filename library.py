@@ -2,8 +2,10 @@ import pandas as pd
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
-
-from sklearn.base import BaseEstimator, TransformerMixin #gives us the tools to build custom transformers
+from sklearn.metrics import f1_score
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+pd.options.mode.chained_assignment = None
 
 #This class maps values in a column, numeric or categorical.
 class MappingTransformer(BaseEstimator, TransformerMixin):

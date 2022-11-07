@@ -209,3 +209,72 @@ def find_random_state(features_df, labels, n=200):
     rs_value = sum(var)/len(var)
     rs_id = np.array(abs(var - rs_value)).argmin()
     return rs_id
+
+def dataset_setup(full_table, label_column_name:str, the_transformer, rs, ts=.2):
+ 
+    features = full_table.drop(columns=label_column_name)
+    labels = full_table[label_column_name].to_list()
+    X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=ts, shuffle=True,
+                                                        random_state=rs, stratify=labels)
+    X_train_transformed = the_transformer.fit_transform(X_train)
+    X_test_transformed = the_transformer.fit_transform(X_test)
+                                        
+    x_trained_numpy = X_train_transformed.to_numpy()
+    x_test_numpy = X_test_transformed.to_numpy()
+    y_train_numpy = np.array(y_train)
+    y_test_numpy = np.array(y_test)
+
+    return x_trained_numpy, x_test_numpy, y_train_numpy,  y_test_numpy
+
+titanic_transformer = Pipeline(steps=[
+    ('drop', DropColumnsTransformer(['Age', 'Gender', 'Class', 'Joined', 'Married',  'Fare'], 'keep')),
+    ('gender', MappingTransformer('Gender', {'Male': 0, 'Female': 1})),
+    ('class', MappingTransformer('Class', {'Crew': 0, 'C3': 1, 'C2': 2, 'C1': 3})),
+    ('ohe', OHETransformer(target_column='Joined')),
+    ('age', TukeyTransformer(target_column='Age', fence='outer')),
+    ('fare', TukeyTransformer(target_column='Fare', fence='outer')),
+    ('minmax', MinMaxTransformer()), 
+    ('imputer', KNNTransformer()) 
+    ], verbose=True)
+
+  
+def titanic_setup(titanic_table, transformer=titanic_transformer, rs=40, ts=.2):
+    label='Survived'
+    return dataset_setup(titanic_table, label, transformer, rs, ts)
+
+customer_transformer = Pipeline(steps=[
+    ('id', DropColumnsTransformer(column_list=['ID'])),  #you may need to add an action if you have no default
+    ('os', OHETransformer(target_column='OS')),
+    ('isp', OHETransformer(target_column='ISP')),
+    ('level', MappingTransformer('Experience Level', {'low': 0, 'medium': 1, 'high':2})),
+    ('gender', MappingTransformer('Gender', {'Male': 0, 'Female': 1})),
+    ('time spent', TukeyTransformer('Time Spent', 'inner')),
+    ('minmax', MinMaxTransformer()),
+    ('imputer', KNNTransformer())
+    ], verbose=True)
+  
+def customer_setup(customer_table, transformer=customer_transformer, rs=76, ts=.2):
+    label='Rating'
+    return dataset_setup(customer_table, label, transformer, rs, ts)
+
+def threshold_results(thresh_list, actuals, predicted):
+    result_df = pd.DataFrame(columns=['threshold', 'precision', 'recall', 'f1', 'accuracy'])
+    for t in thresh_list:
+        yhat = [1 if v >=t else 0 for v in predicted]
+        precision = precision_score(actuals, yhat, zero_division=0)
+        recall = recall_score(actuals, yhat, zero_division=0)
+        f1 = f1_score(actuals, yhat)
+        accuracy = accuracy_score(actuals, yhat)
+        result_df.loc[len(result_df)] = {'threshold':t, 'precision':precision, 'recall':recall, 'f1':f1, 'accuracy':accuracy}
+
+    result_df = result_df.round(2)
+
+    headers = {
+        "selector": "th:not(.index_name)",
+        "props": "background-color: #800000; color: white; text-align: center"
+    }
+    properties = {"border": "1px solid black", "width": "65px", "text-align": "center"}
+
+    fancy_df = result_df.style.format(precision=2).set_properties(**properties).set_table_styles([headers])
+    return (result_df, fancy_df)
+ 

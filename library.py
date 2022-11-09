@@ -6,6 +6,7 @@ from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 pd.options.mode.chained_assignment = None
+from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 
 #This class maps values in a column, numeric or categorical.
 class MappingTransformer(BaseEstimator, TransformerMixin):

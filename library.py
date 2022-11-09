@@ -44,7 +44,7 @@ class MappingTransformer(BaseEstimator, TransformerMixin):
         return result
     
 class DropColumnsTransformer(BaseEstimator, TransformerMixin):
-    def __init__(self, column_list, action='drop'):
+    def __init__(self, column_list, action="drop"):
         assert action in ['keep', 'drop'], f'{self.__class__.__name__} action {action} not in ["keep", "drop"]'
         self.column_list=column_list
         self.action=action
@@ -74,6 +74,8 @@ class DropColumnsTransformer(BaseEstimator, TransformerMixin):
 class OHETransformer(BaseEstimator, TransformerMixin):
     def __init__(self, target_column, dummy_na=False, drop_first=False):  
         self.target_column = target_column
+        self.dummy_na=dummy_na
+        self.drop_first=drop_first
 
     def fit(self, X, y = None):
         print(f"\nWarning: {self.__class__.__name__}.fit does nothing.\n")
@@ -83,7 +85,7 @@ class OHETransformer(BaseEstimator, TransformerMixin):
         assert isinstance(X, pd.core.frame.DataFrame), f'{self.__class__.__name__}.transform expected Dataframe but got {type(X)} instead.'
         assert self.target_column in X.columns.to_list(), f'{self.__class__.__name__}.transform unknown column "{self.target_column}"'
         X_ = X.copy()
-        X_=pd.get_dummies(X,prefix=self.target_column,prefix_sep='_', columns=[self.target_column],dummy_na=False, drop_first=False)
+        X_=pd.get_dummies(X,prefix=self.target_column,prefix_sep='_', columns=[self.target_column],dummy_na=self.dummy_na, drop_first=self.drop_first)
         return X_
 
     def fit_transform(self, X, y = None):
@@ -117,7 +119,7 @@ class Sigma3Transformer(BaseEstimator, TransformerMixin):
 
 class TukeyTransformer(BaseEstimator, TransformerMixin):
     def __init__(self, target_column,fence):
-        self.target_column = target_column  
+        self.target_column = target_column
         self.fence=fence
 
     def fit(self, X, y = None):
@@ -163,7 +165,7 @@ class MinMaxTransformer(BaseEstimator, TransformerMixin):
         from sklearn.preprocessing import MinMaxScaler
         scaler=MinMaxScaler()
         column_name=X_.columns.to_list()
-        scaler_df=pd.DataFrame(scaler.fit_transform(X),columns = column_name)
+        scaler_df=pd.DataFrame(scaler.fit_transform(X_),columns = column_name)
         return scaler_df
 
     def fit_transform(self, X, y = None):

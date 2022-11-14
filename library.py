@@ -7,6 +7,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 pd.options.mode.chained_assignment = None
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
+from sklearn.experimental import enable_halving_search_cv
+from sklearn.model_selection import HalvingGridSearchCV
 
 #This class maps values in a column, numeric or categorical.
 class MappingTransformer(BaseEstimator, TransformerMixin):
@@ -281,3 +283,15 @@ def threshold_results(thresh_list, actuals, predicted):
     fancy_df = result_df.style.format(precision=2).set_properties(**properties).set_table_styles([headers])
     return (result_df, fancy_df)
  
+def halving_search(model, grid, x_train, y_train, factor=3, scoring='roc_auc'):
+    halving_cv = HalvingGridSearchCV(
+        model, grid,  
+        scoring=scoring,
+        n_jobs=-1,
+        min_resources="exhaust",
+        factor=factor,  
+        cv=5, random_state=1234,
+        refit=True,
+    )
+    grid_result=halving_cv.fit(x_train, y_train)
+    return  grid_result

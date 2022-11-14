@@ -129,10 +129,8 @@ class TukeyTransformer(BaseEstimator, TransformerMixin):
         return X
 
     def transform(self, X):
-        fence_value=['inner','outer']
         assert isinstance(X, pd.core.frame.DataFrame), f'expected Dataframe but got {type(X)} instead.'
         assert self.target_column in X.columns.to_list(), f'unknown column {self.target_column}'
-        assert self.fence in fence_value, f'invalid fence "{self.fence}" passed. Fence should be {fence_value[0]} or {fence_value[1]}'
 
         q1 = X[self.target_column].quantile(0.25)
         q3 = X[self.target_column].quantile(0.75)
